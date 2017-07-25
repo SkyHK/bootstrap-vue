@@ -4,91 +4,98 @@
            :class="tableClass"
     >
         <thead :class="headClass">
-            <tr>
-                <th v-for="(field,key) in fields"
-                    @click.stop.prevent="headClicked($event,field,key)"
-                    @keydown.enter.stop.prevent="headClicked($event,field,key)"
-                    @keydown.space.stop.prevent="headClicked($event,field,key)"
-                    :key="key"
-                    :class="fieldClass(field,key)"
-                    :style="field.thStyle || {}"
-                    :aria-label="field.sortable ? ((sortDesc && sortBy === key) ? labelSortAsc : labelSortDesc) : null"
-                    :aria-sort="(field.sortable && sortBy === key) ? (sortDesc ? 'descending' : 'ascending') : null"
-                    :tabindex="field.sortable?'0':null"
-                >
-                  <slot :name="'HEAD_'+key" :label="field.label" :column="key" :field="field">
+        <tr>
+            <th v-for="(field,key) in fields"
+                @click.stop.prevent="headClicked($event,field,key)"
+                @keydown.enter.stop.prevent="headClicked($event,field,key)"
+                @keydown.space.stop.prevent="headClicked($event,field,key)"
+                :key="key"
+                :class="fieldClass(field,key)"
+                :style="field.thStyle || {}"
+                :aria-label="field.sortable ? ((sortDesc && sortBy === key) ? labelSortAsc : labelSortDesc) : null"
+                :aria-sort="(field.sortable && sortBy === key) ? (sortDesc ? 'descending' : 'ascending') : null"
+                :tabindex="field.sortable?'0':null"
+            >
+                <slot :name="'HEAD_'+key" :label="field.label" :column="key" :field="field">
                     <div v-html="field.label"></div>
-                  </slot>
-                </th>
-            </tr>
+                </slot>
+            </th>
+        </tr>
         </thead>
         <tfoot v-if="footClone" :class="footClass">
-            <tr>
-                <th v-for="(field,key) in fields"
-                    @click.stop.prevent="headClicked($event,field,key)"
-                    @keydown.enter.stop.prevent="headClicked($event,field,key)"
-                    @keydown.space.stop.prevent="headClicked($event,field,key)"
-                    :key="key"
-                    :class="fieldClass(field,key)"
-                    :style="field.thStyle || {}"
-                    :aria-label="field.sortable ? ((sortDesc && sortBy === key) ? labelSortAsc : labelSortDesc) : null"
-                    :aria-sort="(field.sortable && sortBy === key) ? (sortDesc ? 'descending' : 'ascending') : null"
-                    :tabindex="field.sortable?'0':null"
-                >
-                  <slot v-if="$scopedSlots['FOOT_'+key]" :name="'FOOT_'+key" :label="field.label" :column="key" :field="field">
+        <tr>
+            <th v-for="(field,key) in fields"
+                @click.stop.prevent="headClicked($event,field,key)"
+                @keydown.enter.stop.prevent="headClicked($event,field,key)"
+                @keydown.space.stop.prevent="headClicked($event,field,key)"
+                :key="key"
+                :class="fieldClass(field,key)"
+                :style="field.thStyle || {}"
+                :aria-label="field.sortable ? ((sortDesc && sortBy === key) ? labelSortAsc : labelSortDesc) : null"
+                :aria-sort="(field.sortable && sortBy === key) ? (sortDesc ? 'descending' : 'ascending') : null"
+                :tabindex="field.sortable?'0':null"
+            >
+                <slot v-if="$scopedSlots['FOOT_'+key]" :name="'FOOT_'+key" :label="field.label" :column="key"
+                      :field="field">
                     <div v-html="field.label"></div>
-                  </slot>
-                  <slot v-else :name="'HEAD_'+key" :label="field.label" :column="key" :field="field">
+                </slot>
+                <slot v-else :name="'HEAD_'+key" :label="field.label" :column="key" :field="field">
                     <div v-html="field.label"></div>
-                  </slot>
-                </th>
-            </tr>
+                </slot>
+            </th>
+        </tr>
         </tfoot>
         <tbody>
-            <tr v-for="(item,index) in _items"
-                :key="index"
-                :class="rowClass(item)"
-                @click="rowClicked($event,item,index)"
-                @hover="rowHovered($event,item,index)"
-            >
-                <td v-for="(field,key) in fields" :key="key" :class="tdClass(field, item, key)">
+        <tr v-for="(item,index) in _items"
+            :key="index"
+            :class="rowClass(item)"
+            @click="rowClicked($event,item,index)"
+            @hover="rowHovered($event,item,index)"
+        >
+            <template v-for="(field,key) in fields">
+                <td v-if="hasFormatter(field)" :key="key" :class="tdClass(field, item, key)"
+                    v-html="callFormatter(field, item, key)">
+                </td>
+                <td v-else :class="tdClass(field, item, key)" :key="key">
                     <slot :name="key" :value="item[key]" :item="item" :index="index">{{item[key]}}</slot>
                 </td>
-            </tr>
-            <tr v-if="showEmpty && (!_items  || _items.length === 0)">
-                <td :colspan="keys(fields).length">
-                    <div v-if="filter" role="alert" aria-live="polite">
-                        <slot name="emptyfiltered">
-                            <div class="text-center my-2" v-html="emptyFilteredText"></div>
-                        </slot>
-                    </div>
-                    <div v-else role="alert" aria-live="polite">
-                        <slot name="empty">
-                            <div class="text-center my-2" v-html="emptyText"></div>
-                        </slot>
-                    </div>
-                </td>
-            </tr>
+            </template>
+        </tr>
+        <tr v-if="showEmpty && (!_items  || _items.length === 0)">
+            <td :colspan="keys(fields).length">
+                <div v-if="filter" role="alert" aria-live="polite">
+                    <slot name="emptyfiltered">
+                        <div class="text-center my-2" v-html="emptyFilteredText"></div>
+                    </slot>
+                </div>
+                <div v-else role="alert" aria-live="polite">
+                    <slot name="empty">
+                        <div class="text-center my-2" v-html="emptyText"></div>
+                    </slot>
+                </div>
+            </td>
+        </tr>
         </tbody>
     </table>
 </template>
 
 <script>
-    import { warn } from '../utils';
-    import { keys } from '../utils/object.js';
-    import { listenOnRootMixin } from '../mixins'
+    import {warn} from '../utils';
+    import {keys} from '../utils/object.js';
+    import {listenOnRootMixin} from '../mixins';
 
     const toString = v => {
         if (!v) {
             return '';
         }
         if (v instanceof Object) {
-            return keys(v).map(k => toString(v[k])).join(' ');
+            return keys(v).map(k => toString(v[k]))
+                .join(' ');
         }
         return String(v);
     };
 
-    const recToString = (obj) => {
+    const recToString = obj => {
         if (!(obj instanceof Object)) {
             return '';
         }
@@ -104,25 +111,17 @@
 
     const defaultSortCompare = (a, b, sortBy) => {
         if (typeof a[sortBy] === 'number' && typeof b[sortBy] === 'number') {
-            if (a[sortBy] < b[sortBy]) {
-                return -1;
-            } else if (a[sortBy] > b[sortBy]) {
-                return 1;
-            }
-            return 0;
-        } else {
-            return toString(a[sortBy]).localeCompare(toString(b[sortBy]), undefined, {
-                numeric: true
-            });
+            return ((a[sortBy] < b[sortBy]) && -1) || ((a[sortBy] > b[sortBy]) && 1) || 0;
         }
+        return toString(a[sortBy]).localeCompare(toString(b[sortBy]), undefined, {
+            numeric: true
+        });
     };
 
     export default {
         mixins: [listenOnRootMixin],
         data() {
             return {
-                sortBy: null,
-                sortDesc: true,
                 localItems: []
             };
         },
@@ -136,11 +135,23 @@
                 default() {
                     if (this && this.itemsProvider) {
                         // Deprecate itemsProvider
-                        warn("b-table: prop 'items-provider' has been deprecated. Pass a function to 'items' instead");
+                        warn('b-table: prop \'items-provider\' has been deprecated. Pass a function to \'items\' instead');
                         return this.itemsProvider;
                     }
                     return [];
                 }
+            },
+            sortBy: {
+                type: String,
+                default: null
+            },
+            sortDesc: {
+                type: Boolean,
+                default: true
+            },
+            apiUrl: {
+                type: String,
+                default: ''
             },
             fields: {
                 type: Object,
@@ -280,7 +291,7 @@
             if (this.hasProvider) {
                 this._providerUpdate();
             }
-            this.listenOnRoot('table::refresh', (id) => {
+            this.listenOnRoot('table::refresh', id => {
                 if (id === this.id) {
                     this._providerUpdate();
                 }
@@ -324,7 +335,8 @@
                     currentPage: this.currentPage,
                     filter: this.filter,
                     sortBy: this.sortBy,
-                    sortDesc: this.sortDesc
+                    sortDesc: this.sortDesc,
+                    apiUrl: this.apiUrl
                 };
             },
             _items() {
@@ -374,10 +386,10 @@
                 }
 
                 // Apply local Sort
-                if (this.sortBy && !this.providerSorting) {
+                if (sortBy && !this.providerSorting) {
                     items = items.sort((a, b) => {
-                        const r = sortCompare(a, b, this.sortBy);
-                        return this.sortDesc ? r : r * -1;
+                        const r = sortCompare(a, b, sortBy);
+                        return sortDesc ? r : r * -1;
                     });
                 }
 
@@ -449,12 +461,7 @@
                     return;
                 }
                 let sortChanged = false;
-                if (!field.sortable) {
-                    if (this.sortBy) {
-                        this.sortBy = null;
-                        sortChanged = true;
-                    }
-                } else {
+                if (field.sortable) {
                     if (key === this.sortBy) {
                         // Change sorting direction on column
                         this.sortDesc = !this.sortDesc;
@@ -499,14 +506,25 @@
 
                 if (data.then && typeof data.then === 'function') {
                     // Provider returned Promise
-                    data.then((items) => {
+                    data.then(items => {
                         this._providerSetLocal(items);
                     });
                 } else {
                     // Provider returned Array data
                     this._providerSetLocal(data);
                 }
+            },
+            hasFormatter(field) {
+                return field.formatter && ((typeof (field.formatter) === 'function') || (typeof (field.formatter) === 'string'));
+            },
+            callFormatter(field, item, key) {
+                if (field.formatter && (typeof (field.formatter) === 'function'))
+                    return field.formatter(item[key]);
+
+                if (field.formatter && (typeof (this.$parent[field.formatter]) === 'function'))
+                    return this.$parent[field.formatter](item[key]);
             }
+
         }
     };
 </script>
